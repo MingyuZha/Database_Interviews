@@ -1,1 +1,4 @@
-# Database_Interviews
+# :star::star:数据库面试精华
+该repository收藏了数据库相关的面试知识点。主要分为以下两个部分：
+1. 数据库基础知识点
+2. 数据库SQL习题集锦
