@@ -1,5 +1,35 @@
 # 数据库基础知识
 
+# 目录
+
+\* [Functional Dependency (函数依赖)](#functional-dependency-函数依赖)
+
+​      \* [Key (键)](#key-键)
+
+​         \* [超键 (Superkey)](#超键-superkey)
+
+​         \* [阿姆斯壮定则 (<em>Armstrong's Axioms</em>)](#阿姆斯壮定则-armstrongs-axioms)
+
+​      \* [Normal Forms (范式)](#normal-forms-范式)
+
+​         \* [First Normal Form (第一范式)](#first-normal-form-第一范式)
+
+​         \* [Second Normal Form (第二范式)](#second-normal-form-第二范式)
+
+​            \* [函数依赖](#函数依赖)
+
+​               \* [完全函数依赖](#完全函数依赖)
+
+​               \* [部分函数依赖](#部分函数依赖)
+
+​               \* [传递函数依赖](#传递函数依赖)
+
+​         \* [如何判断表是否符合第二范式？](#如何判断表是否符合第二范式)
+
+​         \* [Third Normal Form (第三范式)](#third-normal-form-第三范式)
+
+​         \* [BCNF范式](#bcnf范式)
+
 ## Functional Dependency (函数依赖)
 
 如果两条记录中属性A1, A2, … , An一致，那么这两条记录的属性B1, B2, … , Bn也一定一致，这就是功能相依性，用符号表示为：![eq](https://latex.codecogs.com/gif.latex?A_1%2C%20A_2%2C%20%5Cdots%2C%20A_n%5Crightarrow%20B_1%2C%20B_2%2C%20%5Cdots%2C%20B_n)
