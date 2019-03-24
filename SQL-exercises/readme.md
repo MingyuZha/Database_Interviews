@@ -13,6 +13,8 @@
 * [ANY, ALL](#any-all)
 * [IFNULL](#ifnull)
 * [NULL](#null)
+* [OFFSET](#offset)
+* [CREATE FUNCTION](#create-function)
 ## SELECT TOP/LIMIT
 
 The SELECT TOP clause is used to specify the number of records to return.
