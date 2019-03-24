@@ -1,6 +1,6 @@
 # SQL Syntax
 ## 目录
-* [SELECT TOP/LIMIT](#select-toplimit)
+* [LIMIT](#select-toplimit)
 * [LIKE](#like)
 * [Wildcard Characters in SQL Server](#wildcard-characters-in-sql-server)
 * [IN](#in)
@@ -15,13 +15,11 @@
 * [NULL](#null)
 * [OFFSET](#offset)
 * [CREATE FUNCTION](#create-function)
-## SELECT TOP/LIMIT
+## LIMIT
 
-The SELECT TOP clause is used to specify the number of records to return.
+The ```LIMIT``` clause is used to specify the number of records to return.
 
-The SELECT TOP clause is useful on large tables with thousands of records. Returning a large number of records can impact on performance.
-
-In **MySql**, we use ```LIMIT``` Clause instead.
+The ```LIMIT``` clause is useful on large tables with thousands of records. Returning a large number of records can impact on performance.
 
 ```mysql
 SELECT * FROM Customers
