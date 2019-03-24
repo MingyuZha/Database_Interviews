@@ -27,6 +27,12 @@ WHERE Country='Germany'
 LIMIT 3;
 ```
 
+```LIMIT```还有一种用法：Returning a range of rows from a table called employee (starting at record 2, return the next 4 rows)
+
+```mysql
+select * from employee limit 2,4
+```
+
 ## LIKE
 
 The LIKE operator is used in a WHERE clause to search for a specified pattern in a column.
@@ -219,4 +225,32 @@ SELECT CustomerName, ContactName, Address
 FROM Customers
 WHERE Address IS NULL;
 ```
+
+## OFFSET
+
+- OFFSET excludes the first set of records.
+- OFFSET can **only** be used with an ```ORDER BY``` clause.
+
+The general syntax to exclude first n records is: 
+
+```mysql
+SELECT column-names
+  FROM table-name
+ ORDER BY column-names
+OFFSET n ROWS
+```
+
+To exclude first n records and return only the next m records:
+
+```mysql
+SELECT column-names
+  FROM table-name
+ ORDER BY column-names
+OFFSET n ROWS
+ FETCH NEXT m ROWS ONLY
+```
+
+This will return only record (n + 1) to (n + 1 + m).
+
+## CREATE FUNCTION
 
