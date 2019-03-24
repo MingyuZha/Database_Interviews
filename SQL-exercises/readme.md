@@ -254,3 +254,14 @@ This will return only record (n + 1) to (n + 1 + m).
 
 ## CREATE FUNCTION
 
+```CREATE FUNCTION``` Syntax:
+
+```mysql
+CREATE FUNCTION func_name (v Data_type) RETURNS Data_type
+BEGIN
+DECLARE tmp_v Data_type
+SET tmp_v = some operation;
+RETURN (SELECT ... FROM ... WHERE ...);
+END
+```
+
