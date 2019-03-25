@@ -1,18 +1,12 @@
 # 大数据相关面试题整理
 
-\* [Java相关](#java相关)
-
-​	\* [Java中"equals()"和"=="的区别](#java中equals和的区别)
-
-​         \* [Java中"&gt;&gt;&gt;"和"&gt;&gt;"的区别](#java中和的区别)
-
-​         \* [HashMap()在Java中的底层实现](#hashmap在java中的底层实现)
-
-​         \* [Java线程的6种状态及切换](#java线程的6种状态及切换)
-
-\* [大数据组件相关](#大数据组件相关)
-
-​         \* [Spark和MR的区别](#spark和mr的区别)
+* [Java相关](#java相关)
+          * [Java中"equals()"和"=="的区别](#java中equals和的区别)
+          * [Java中"&gt;&gt;&gt;"和"&gt;&gt;"的区别](#java中和的区别)
+          * [HashMap()在Java中的底层实现](#hashmap在java中的底层实现)
+          * [Java线程的6种状态及切换](#java线程的6种状态及切换)
+* [大数据组件相关](#大数据组件相关)
+          * [Spark和MR的区别](#spark和mr的区别)
 
 ## Java相关
 
