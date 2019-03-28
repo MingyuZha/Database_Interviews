@@ -259,6 +259,268 @@ public V get(Object key) {
 
 ## 大数据组件相关
 
+### MapReduce过程
+
+MapReduce大体可分为五个子阶段：Sort, Partition, Shuffle, Combine, Merge
+
+![img](https://images0.cnblogs.com/i/361346/201404/041657025158483.png)
+
+从上图可以发现，在Map和Reduce之间有着一系列的过程，其中包括Partition, Sort, Combine, Copy, Merge等。而这些过程往往被统称为"Shuffle" 也就是 “混洗”。下面以WordCount任务为例，详细讲解MapReduce的工作流程。
+
+假设我们有两个文本文件：
+
+```
+File 1 内容：
+My name is Tony
+My company is pivotal
+
+File 2 内容：
+My name is Lisa
+My company is EMC
+```
+
+#### 第一步：Map
+
+顾名思义， Map 就是拆解.
+
+首先我们的输入就是两个文件， 默认情况下就是两个split, 对应前面图中的split 0, split 1
+
+两个split 默认会分给两个Mapper来处理， WordCount例子相当地暴力， 这一步里面就是直接把文件内容分解为单词和 1 （注意， 不是具体数量， 就是数字1）其中的单词就是我们的主健，也称为Key, 后面的数字就是对应的值，也称为value.
+
+那么对应两个Mapper的输出就是：
+
+**split 0:**
+
+```
+My       1
+name    1
+is         1
+Tony     1
+My          1
+company     1
+is       1
+Pivotal   1
+```
+
+**split 1:**
+
+```
+My       1
+name    1
+is       1
+Lisa     1
+My       1
+company  1
+is       1
+EMC   　　1
+```
+
+#### 第二步：Partition
+
+Partition 是什么？ Partition 就是分区。
+
+为什么要分区？ 因为有时候会有多个Reducer, Partition就是提前对输入进行处理， 根据将来的Reducer进行分区. 到时候Reducer处理的时候， 只需要处理分给自己的数据就可以了。 
+
+如何分区？ 主要的分区方法就是按照Key 的不同，把数据分开，其中很重要的一点就是要保证Key的唯一性， 因为将来做Reduce的时候有可能是在不同的节点上做的， 如果一个Key同时存在于两个节点上， Reduce的结果就会出问题， 所以很常见的Partition方法就是哈希。
+
+结合我们的例子， 我们这里假设有两个Reducer, 前面两个split 做完Partition的结果就会如下：
+
+**split 0:**
+
+```
+Partition 1:
+company　1
+is     　1
+is　　　　1
+
+Partition 2:
+My　　   1
+My　　　　1
+name　　1
+Pivotal   1
+Tony　　  1
+```
+
+**split 1:**
+
+```
+Partition 1:
+company 1
+is 　　　1
+is      1
+EMC　　　1
+
+Partition 2:
+My　　   1
+My       1
+name　　 1
+Lisa     1
+```
+
+其中Partition 1 将来是准备给Reducer 1 处理的， Partition 2 是给Reducer 2 的.
+
+这里我们可以看到， Partition 只是把所有的条目按照Key 分了一下区， 没有其他任何处理， 每个区里面的Key 都不会出现在另外一个区里面。
+
+#### 第三步：Sort
+
+Sort 就是排序， 其实这个过程在我来看并不是必须的， 完全可以交给客户自己的程序来处理。 那为什么还要排序呢？ 可能是写MapReduce的大牛们想，“大部分reduce 程序应该都希望输入的是已经按Key排序好的数据， 如果是这样， 那我们就干脆顺手帮你做掉啦！” 
+
+那么我们假设对前面的数据再进行排序， 结果如下：
+
+**split 0**
+
+```
+Partition 1:
+company　1
+is     　1
+is　　　　1
+
+Partition 2:
+My　　   1
+My　　　　1
+name　　1
+Pivotal   1
+Tony　　  1
+```
+
+ **split 1**
+
+```
+Partition 1:
+company 1
+EMC　　 1
+is 　　　1
+is      1
+
+Partition 2:
+Lisa　　 1
+My　　   1
+My       1
+name　　 1
+```
+
+这里可以看到， 每个partition里面的条目都按照Key的顺序做了排序。
+
+#### 第四步：Combine
+
+什么是Combine呢？ Combine 其实可以理解为一个**mini Reduce**过程， 它发生在前面Map的输出结果之后， 目的就是在结果送到Reducer之前先对其进行一次计算，**以减少文件的大小，方便后面的传输**。 但这步也不是必须的。
+
+按照前面的输出， 执行Combine:
+
+**split 0**
+
+```
+Partition 1:
+company　1
+is     　2
+
+Partition 2:
+My　　   2
+name　　1
+Pivotal   1
+Tony　　  1
+```
+
+ **split 1**
+
+```
+Partition 1:
+company 1
+EMC　　 1
+is 　　　2
+
+Partition 2:
+Lisa　　 1
+My　　   2
+name　　 1
+```
+
+#### 第五步：Copy
+
+下面就要准备把输出结果传送给Reducer了。 这个阶段被称为Copy, 但事实上叫他Download更为合适， 因为实现的时候， 是通过http的方式， 由Reducer节点向各个mapper节点下载属于自己分区的数据。
+
+那么根据前面的Partition, 下载完的结果如下：
+
+Reducer节点 1 共包含两个文件:
+
+```
+Partition 1:
+company　1
+is     　2
+```
+
+```
+Partition 1:
+company　　1
+EMC　　　　1
+is　　　　2
+```
+
+Reducer节点 2 也是两个文件:
+
+```
+Partition 1：
+My　　   2
+name　　1
+Pivotal   1
+Tony　　  1
+```
+
+```
+Partition 2:
+Lisa　　 1
+My　　   2
+name　　 1
+```
+
+#### 第六步：Merge
+
+如上一步所示， 此时Reducer得到的文件是从不同Mapper那里下载到的， 需要对他们进行合并为一个文件， 所以下面这一步就是Merge, 结果如下：
+
+Reducer 节点 1
+
+```
+company　1
+company  1
+EMC　　  1
+is     　2
+is　　　　2
+```
+
+Reducer 节点 2
+
+```
+Lisa　　1
+My　　   2
+My　　　　2
+name　　1
+name　　1
+Pivotal   1
+Tony　　  1
+```
+
+#### 第七步：Reduce
+
+终于可以进行最后的Reduce 啦...这步相当简单喽， 根据每个文件中的内容最后做一次统计，结果如下：
+
+Reducer 节点 1
+
+```
+company　2
+EMC　　　　1
+is     　4
+```
+
+Reducer 节点 2
+
+```
+Lisa　　1
+My　　   4
+name　　2
+Pivotal   1
+Tony　　  1
+```
+
 ### Spark和MR的区别
 
 1. Spark把运算的中间数据存在内存中，迭代计算效率更高；MR的中间结果需要落地，需要保存到磁盘。 	
@@ -269,7 +531,26 @@ public V get(Object key) {
 
 4. Spark对性能要求较高，通常需要根据不同的业务场景进行调优；而MR对性能的要求相对较低，运行更稳定，适合长期后台运行。
 
+### Spark基础数据结构RDD
 
+* RDD的全称是**Resilient Distributed Dataset**，即弹性分布式数据集，它是spark的基本计算单元，可以通过一系列算子进行操作(主要有**Transformation和Action**操作)。
+* RDD是一个不可修改的，分布的对象集合。每个RDD由多个分区组成，每个分区可以同时在集群中的不同节点上计算。RDD可以包含Python，Java和Scala中的任意对象。
+* DAG （Directed Acycle graph，有向无环图）：反应RDD之间的依赖
+* 窄依赖（Narrow dependency）：子RDD依赖于父RDD中固定的data
+* 宽依赖（Wide Dependency）：子RDD对父RDD中的所有data partition都有依赖
+
+#### RDD特点
+
+1. 有一个分片列表。就是能被切分，和hadoop一样的，能够切分的数据才能并行计算。
+2. 有一个函数计算每一个分片，这里指的是下面会提到的compute函数。
+3. 对其他的RDD的依赖列表，依赖还具体分为宽依赖和窄依赖，但并不是所有的RDD都有依赖。
+4. 可选：key-value型的RDD是根据哈希来分区的，类似于mapreduce当中的Paritioner接口，控制key分到哪个reduce。
+5. 可选：每一个分片的优先计算位置（preferred locations），比如HDFS的block的所在位置应该是优先计算的位置。
+
+#### RDD操作
+
+- transformations：接受RDD并返回RDD。Transformation采用惰性调用机制，每个RDD记录父RDD转换的方法，这种调用链表称之为血缘（lineage）。
+- action：接受RDD但是返回非RDD。Action调用会直接计算。
 
 ## 大数组算法
 
@@ -301,7 +582,9 @@ public V get(Object key) {
 
 整个过程的时间复杂度在O(n)的线性级别上(没有任何循环嵌套)。但主要时间消耗在第一步的第二次内存-磁盘数据交换上，即10G数据分255个文件写回磁盘上。**一般而言，如果第二步过后，内存可以容纳下存在中位数的某一个文件的话，直接快排就可以了。**
 
+#### 基于堆(Heap)的解法
 
+假设一共有1000个数据，那么中位数就是排序后数组中第500个数，因此，求解中位数这个问题可以转换成求数组中**第K大的数**，即经典的**Top K**问题。但是如果数据有10G大，但是内存只有2G，如果使用最大/小堆来求数据的中位数，我们需要维护一个大小为5G的最大堆，仍然无法fit进内存。因此，我们可以考虑将K分解为若干份，每次求出数组中的**Top k**，**k < K**。使得包含k个数的最大堆可以放进内存。总结一下，解题的思路为：先构建k个数的堆，先找出第0到k大的数，再扫描一遍数组找出第k+1到2k的数，再扫描直到找出第K个数。
 
 
 
